@@ -1,5 +1,6 @@
-from fastapi import FastAPI, status
+from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 app = FastAPI(
     title="Trabajo Practico 5",
@@ -51,3 +52,34 @@ async def get_user(user_id: str):
           content="No existe usuario"
 
         )
+
+
+app = FastAPI()
+task_db = {}
+
+class Task(BaseModel):
+    title: str
+    description: str
+    status: str
+
+@app.post("/tasks/create")
+async def create_task(task: Task):
+    # Puedes validar más campos según tus necesidades
+    task_id = len(task_db) + 1
+    task_data = task.dict()
+    task_db[task_id] = task_data
+    return {"message": "Tarea creada exitosamente"}
+
+
+app = FastAPI()
+
+users_db = {}
+tasks_db = {}
+
+@app.get("/tasks/{user_id}")
+async def get_tasks(user_id: str):
+    if user_id in tasks_db:
+        user_tasks = tasks_db[user_id]
+        return {"tasks": user_tasks}
+    else:
+        raise HTTPException(status_code=404, detail="No se encontraron tareas para el usuario especificado")
